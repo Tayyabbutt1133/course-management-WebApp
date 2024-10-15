@@ -1,71 +1,62 @@
 import { Router } from "express";
 import bcrypt from 'bcryptjs';
-import jwt from "jsonwebtoken"; // Corrected import for jsonwebtoken
+import jwt from "jsonwebtoken";
 import User from '../models/user.js';
-
 
 const router = Router();
 
-
-// route created
+// Register Route
 router.post('/register', async (req, res) => {
-    let name = req.body.name
-    let email = req.body.email
-    let password = req.body.password
-    let role = req.body.role
+    try {
+        const { name, email, password, role } = req.body;
 
+        // Check if user already exists
+        const existingUser = await User.findOne({ email });
+        if (existingUser) {
+            return res.status(400).json({ message: "Email is already Registered!" });
+        }
 
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
+        // Hash the password
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
 
-    const record = await User.findOne({
-        email: email
-    })
-
-// validating registered user
-
-    if (record)
-    {
-        res.status(400).send({
-            message: "Email is already Registered !"
-        })
-    }
-else
-    {
+        // Create new user
         const user = new User({
-            name: name,
-            email: email,
+            name,
+            email,
             password: hashedPassword,
-            role: role
-        })
+            role
+        });
+
         const result = await user.save();
 
-        // JWT Token
-        const { _id } = await result.toJSON()
-        
-        const token = jwt.sign({ _id: _id }, "secret");
-        
-        res.cookie( "jwt", token,{
+        // Generate JWT Token
+        const token = jwt.sign({ _id: result._id }, process.env.JWT_SECRET || "defaultSecret", { expiresIn: '1d' });
+
+        // Set JWT in cookies
+        res.cookie("jwt", token, {
             httpOnly: true,
-            maxAge: 24 * 60 * 60 * 1000   // 1 day  
-        })
-        
-        res.send({
-          message: "success"
-      })
+            maxAge: 24 * 60 * 60 * 1000   // 1 day
+        });
 
-        // giving back respond to post request
-    res.json({
-        user: result
-    })
+        // Send response
+        res.status(201).json({
+            message: "User registered successfully!",
+            user: result
+        });
 
-        }
+    } catch (error) {
+        console.error('Error during registration:', error);
+        res.status(500).json({ message: "Internal Server Error" });
+    }
 });
 
+// Login Route (Placeholder)
 router.post('/login', async (req, res) => {
     res.send("login user");
 });
 
+// Get User Route (Placeholder)
 router.get('/user', async (req, res) => {
     res.send("user");
 });
