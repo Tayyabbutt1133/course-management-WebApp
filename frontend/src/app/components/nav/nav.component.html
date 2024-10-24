@@ -1,64 +1,70 @@
-<!-- component -->
-<nav class="bg-slate-800  dark:border-gray-700 px-2 sm:px-10 py-6 dark:bg-gray-800 shadow">
+<!-- nav.component.html -->
+<nav class="bg-gray-800 p-4">
     <div class="container flex flex-wrap justify-between items-center mx-auto">
-      <a routerLink="/" class="flex items-center">
-        <span class="self-center font-lexend text-xl font-semibold whitespace-nowrap text-white">
-          SkillStream
-        </span>
-      </a>
-  
-      <div class="flex items-center">
-        <button
-          id="menu-toggle"
-          type="button"
-          class="inline-flex items-center p-2 ml-3 text-sm text-gray-500 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-600 md:hidden"
-        >
-          <span class="sr-only">Open main menu</span>
-          <!-- Hamburger icon -->
-          <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M4 6h16M4 12h16m-7 6h7"
-            />
-          </svg>
+        <!-- Logo/Brand -->
+        <a class="flex items-center" routerLink="/">
+            <span class="self-center font-lexend text-xl font-semibold whitespace-nowrap text-white">
+                SkillStream
+            </span>
+        </a>
+
+        <!-- Mobile menu button -->
+        <button (click)="toggleMobileMenu()" 
+                class="md:hidden text-white hover:text-gray-300">
+            <span class="sr-only">Open main menu</span>
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" 
+                      stroke-linejoin="round" 
+                      stroke-width="2" 
+                      d="M4 6h16M4 12h16m-7 6h7">
+                </path>
+            </svg>
         </button>
-      </div>
-  
-      <div
-        class="w-full md:block md:w-auto hidden"
-        id="mobile-menu"
-      >
-        <ul class="flex flex-col mt-4 md:flex-row md:space-x-8 md:mt-0 md:text-lg md:font-medium ">
-          <li>
-            <a
-            routerLink="/login"
-              class="block border-white cursor-pointer text-white rounded md:bg-transparent md:p-0 "
-              aria-current="page"
-            >
-             Login
-            </a>
-          </li>
-          <li>
-            <a
-              routerLink="/register"
-              class="block py-2 font-lexend pr-4 pl-3 text-white border-b border-gray-100 hover:bg-gray-50 cursor-pointer md:hover:bg-transparent md:border-0 md:hover:text-blue-700 md:p-0 dark:text-gray-400 md:dark:hover:text-white dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent dark:border-gray-700"
-            >
-              Register
-            </a>
-          </li>
-        </ul>
-      </div>
-  
+
+        <!-- Desktop Navigation -->
+        <div class="hidden md:flex md:items-center md:space-x-4">
+            <!-- Show these links when user is NOT authenticated -->
+            <div *ngIf="!authenticated" class="flex space-x-4">
+                <a routerLink="/login" 
+                   class="text-white hover:text-gray-300 px-3 py-2 rounded-md">
+                    Login
+                </a>
+                <a routerLink="/register" 
+                   class="text-white hover:text-gray-300 px-3 py-2 rounded-md">
+                    Register
+                </a>
+            </div>
+
+            <!-- Show these links when user is authenticated -->
+            <div *ngIf="authenticated" class="flex space-x-4">
+                <button (click)="logout()" 
+                        class="text-white hover:text-gray-300 px-3 py-2 rounded-md">
+                    Logout
+                </button>
+            </div>
+        </div>
+
+        <!-- Mobile Navigation -->
+        <div class="md:hidden" [ngClass]="{'block': isMobileMenuOpen, 'hidden': !isMobileMenuOpen}">
+            <!-- Mobile menu for non-authenticated users -->
+            <div *ngIf="!authenticated" class="px-2 pt-2 pb-3 space-y-1">
+                <a routerLink="/login" 
+                   class="block text-white hover:text-gray-300 px-3 py-2 rounded-md">
+                    Login
+                </a>
+                <a routerLink="/register" 
+                   class="block text-white hover:text-gray-300 px-3 py-2 rounded-md">
+                    Register
+                </a>
+            </div>
+
+            <!-- Mobile menu for authenticated users -->
+            <div *ngIf="authenticated" class="px-2 pt-2 pb-3 space-y-1">
+                <button (click)="logout()" 
+                        class="block w-full text-left text-white hover:text-gray-300 px-3 py-2 rounded-md">
+                    Logout
+                </button>
+            </div>
+        </div>
     </div>
-  </nav>
-  
-  <script>
-    const menuToggle = document.getElementById('menu-toggle');
-    const mobileMenu = document.getElementById('mobile-menu');
-  
-    menuToggle.addEventListener('click', function () {
-      mobileMenu.classList.toggle('hidden');
-    });
-  </script>
+</nav>
