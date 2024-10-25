@@ -5,22 +5,30 @@ import User from '../models/user.js';
 
 const router = Router();
 
-// Register Route
+
+// Register Route - Only for students and teachers
 router.post('/register', async (req, res) => {
     try {
         const { name, email, password, role } = req.body;
 
-        // Check if user already exists
-        const existingUser = await User.findOne({ email });
-        if (existingUser) {
-            return res.status(400).json({ message: "Email is already Registered!" });
+        // Check if role is valid (only student or teacher allowed)
+        if (!['student', 'teacher'].includes(role)) {
+            return res.status(400).json({ 
+                message: "Invalid role. Only student or teacher roles are allowed" 
+            });
         }
 
-        // Hash the password
+        // Check if user exists
+        const existingUser = await User.findOne({ email });
+        if (existingUser) {
+            return res.status(400).json({ message: "Email is already registered" });
+        }
+
+        // Hash password
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
-        // Create new user
+        // Create user
         const user = new User({
             name,
             email,
@@ -30,22 +38,24 @@ router.post('/register', async (req, res) => {
 
         const result = await user.save();
 
-        // Generate JWT Token immediately after registration
-        const token = jwt.sign({ _id: result._id }, process.env.JWT_SECRET || "defaultSecret", {
-            expiresIn: '1d'
-        });
+        // Generate JWT
+        const token = jwt.sign(
+            { _id: result._id },
+            process.env.JWT_SECRET || "defaultSecret",
+            { expiresIn: '1d' }
+        );
 
-        // Set JWT in cookies
+        // Set cookie
         res.cookie("jwt", token, {
             httpOnly: true,
-            maxAge: 24 * 60 * 60 * 1000, // 1 day
+            maxAge: 24 * 60 * 60 * 1000,
             sameSite: 'strict',
             secure: process.env.NODE_ENV === 'production'
         });
 
-        // Send response with user data (excluding password)
+        // Send response
         res.status(201).json({
-            message: "User registered successfully!",
+            message: "Registration successful!",
             user: {
                 id: result._id,
                 name: result.name,
@@ -55,44 +65,48 @@ router.post('/register', async (req, res) => {
         });
 
     } catch (error) {
-        console.error('Error during registration:', error);
-        res.status(500).json({ message: "Internal Server Error" });
+        console.error('Registration error:', error);
+        res.status(500).json({ 
+            message: error.message || "Error during registration" 
+        });
     }
 });
 
-// Login Route
+// Login Route - For all users including admin
 router.post('/login', async (req, res) => {
     try {
         const { email, password } = req.body;
 
-        // Find user by email
+        // Find user
         const user = await User.findOne({ email });
         if (!user) {
-            return res.status(404).json({ message: "User not found!" });
+            return res.status(404).json({ message: "User not found" });
         }
 
         // Verify password
-        const isValidPassword = await bcrypt.compare(password, user.password);
-        if (!isValidPassword) {
-            return res.status(400).json({ message: "Invalid password!" });
+        const validPassword = await bcrypt.compare(password, user.password);
+        if (!validPassword) {
+            return res.status(400).json({ message: "Invalid password" });
         }
 
-        // Generate JWT Token
-        const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET || "defaultSecret", {
-            expiresIn: '1d'
-        });
+        // Generate JWT
+        const token = jwt.sign(
+            { _id: user._id },
+            process.env.JWT_SECRET || "defaultSecret",
+            { expiresIn: '1d' }
+        );
 
-        // Set JWT in cookies
+        // Set cookie
         res.cookie("jwt", token, {
             httpOnly: true,
-            maxAge: 24 * 60 * 60 * 1000,   // 1 day
-            sameSite: 'strict',            // Protect against CSRF
-            secure: process.env.NODE_ENV === 'production' // Use secure cookies in production
+            maxAge: 24 * 60 * 60 * 1000,
+            sameSite: 'strict',
+            secure: process.env.NODE_ENV === 'production'
         });
 
         // Send response
         res.json({
-            message: "Login successful!",
+            message: "Login successful",
             user: {
                 id: user._id,
                 name: user.name,
@@ -102,8 +116,8 @@ router.post('/login', async (req, res) => {
         });
 
     } catch (error) {
-        console.error('Error during login:', error);
-        res.status(500).json({ message: "Internal Server Error" });
+        console.error('Login error:', error);
+        res.status(500).json({ message: "Error during login" });
     }
 });
 

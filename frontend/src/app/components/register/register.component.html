@@ -1,4 +1,4 @@
-// register.component.html
+<!-- register.component.html -->
 <div class="container mx-auto max-w-md p-8 border border-gray-300 rounded-lg shadow-md my-10">
     <h1 class="text-2xl font-semibold text-center mb-6">Create an account</h1>
 
@@ -52,7 +52,7 @@
                 Password must be at least 6 characters
             </div>
         </div>
-
+<!-- 
         <div class="mb-4">
             <label class="block text-gray-700 text-sm font-bold mb-2">Register as:</label>
             <select 
@@ -61,6 +61,22 @@
             >
                 <option value="">Select role</option>
                 <option value="admin">Admin</option>
+                <option value="teacher">Teacher</option>
+                <option value="student">Student</option>
+            </select>
+            <div *ngIf="form.get('role')?.touched && form.get('role')?.errors?.['required']" 
+                 class="text-red-500 text-sm mt-1">
+                Role is required
+            </div>
+        </div> -->
+
+        <div class="mb-4">
+            <label class="block text-gray-700 text-sm font-bold mb-2">Register as:</label>
+            <select 
+                formControlName="role"
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-indigo-500"
+            >
+                <option value="">Select role</option>
                 <option value="teacher">Teacher</option>
                 <option value="student">Student</option>
             </select>

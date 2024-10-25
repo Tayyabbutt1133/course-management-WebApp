@@ -5,7 +5,7 @@ import { FormGroup, FormBuilder, ReactiveFormsModule, Validators } from '@angula
 import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
 import Swal from 'sweetalert2';
-import { Emitters } from '../emitters/emitter';
+import { Emitters } from '../emitters/emitter';  // Add this import
 
 @Component({
   selector: 'app-register',
@@ -16,6 +16,10 @@ import { Emitters } from '../emitters/emitter';
 })
 export class RegisterComponent {
   form: FormGroup;
+  roles = [
+    { value: 'teacher', label: 'Teacher' },
+    { value: 'student', label: 'Student' }
+  ];
 
   constructor(
     private formBuilder: FormBuilder,
@@ -23,7 +27,7 @@ export class RegisterComponent {
     private router: Router
   ) {
     this.form = this.formBuilder.group({
-      name: ['', Validators.required],
+      name: ['', [Validators.required, Validators.minLength(2)]],
       email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required, Validators.minLength(6)]],
       role: ['', Validators.required]
@@ -45,12 +49,9 @@ export class RegisterComponent {
       withCredentials: true
     }).subscribe({
       next: (response: any) => {
-        // Emit authentication state
-        Emitters.authEmitter.emit(true);
-        
         Swal.fire('Success', 'Registration successful!', 'success');
-        // Navigate to home instead of login since we're already authenticated
-        this.router.navigate(['/']);
+        Emitters.authEmitter.emit(true);  // Emit authentication state
+        this.router.navigate(['/']);  // Navigate to home instead of login
       },
       error: (err) => {
         Swal.fire('Error', err.error.message || 'An error occurred during registration', 'error');
