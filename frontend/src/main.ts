@@ -8,6 +8,7 @@ import { RegisterComponent } from './app/components/register/register.component'
 import { provideRouter, Routes } from '@angular/router'; // Import provideRouter and Routes
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { HttpClientModule } from '@angular/common/http';
+import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 
 // Define your routes
 const routes: Routes = [
@@ -21,7 +22,7 @@ const routes: Routes = [
 bootstrapApplication(AppComponent, {
   providers: [
     ...appConfig.providers,
-    provideRouter(routes)  // Provide your routes here
+    provideRouter(routes), provideAnimationsAsync()  // Provide your routes here
   ]
 })
 .catch((err) => console.error(err));

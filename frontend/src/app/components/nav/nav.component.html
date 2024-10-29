@@ -1,21 +1,21 @@
-<!-- nav.component.html -->
+<!-- nav.component.html updated admin section -->
 <nav class="bg-gray-800 p-4">
     <div class="container flex flex-wrap justify-between items-center mx-auto">
         <!-- Logo/Brand -->
         <a class="flex items-center" routerLink="/">
             <span class="self-center font-lexend text-xl font-semibold whitespace-nowrap text-white">
-                SkillStream
+                CourseStream
             </span>
         </a>
 
         <!-- Mobile menu button -->
-        <button (click)="toggleMobileMenu()" 
+        <button (click)="toggleMobileMenu()"
                 class="md:hidden text-white hover:text-gray-300">
             <span class="sr-only">Open main menu</span>
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" 
-                      stroke-linejoin="round" 
-                      stroke-width="2" 
+                <path stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
                       d="M4 6h16M4 12h16m-7 6h7">
                 </path>
             </svg>
@@ -25,19 +25,35 @@
         <div class="hidden md:flex md:items-center md:space-x-4">
             <!-- Show these links when user is NOT authenticated -->
             <div *ngIf="!authenticated" class="flex space-x-4">
-                <a routerLink="/login" 
+                <a routerLink="/login"
                    class="text-white hover:text-gray-300 px-3 py-2 rounded-md">
                     Login
                 </a>
-                <a routerLink="/register" 
+                <a routerLink="/register"
                    class="text-white hover:text-gray-300 px-3 py-2 rounded-md">
                     Register
                 </a>
             </div>
 
-            <!-- Show these links when user is authenticated -->
-            <div *ngIf="authenticated" class="flex space-x-4">
-                <button (click)="logout()" 
+            <!-- Admin Navigation -->
+            <div *ngIf="authenticated && isAdmin" class="flex space-x-4">
+                <a routerLink="/admin/teachers"
+                   class="text-white hover:text-gray-300 px-3 py-2 rounded-md">
+                    Teachers
+                </a>
+                <a routerLink="/admin/students"
+                   class="text-white hover:text-gray-300 px-3 py-2 rounded-md">
+                    Students
+                </a>
+                <button (click)="logout()"
+                        class="text-white hover:text-gray-300 px-3 py-2 rounded-md">
+                    Logout
+                </button>
+            </div>
+
+            <!-- Non-admin authenticated user -->
+            <div *ngIf="authenticated && !isAdmin" class="flex space-x-4">
+                <button (click)="logout()"
                         class="text-white hover:text-gray-300 px-3 py-2 rounded-md">
                     Logout
                 </button>
@@ -48,19 +64,35 @@
         <div class="md:hidden" [ngClass]="{'block': isMobileMenuOpen, 'hidden': !isMobileMenuOpen}">
             <!-- Mobile menu for non-authenticated users -->
             <div *ngIf="!authenticated" class="px-2 pt-2 pb-3 space-y-1">
-                <a routerLink="/login" 
+                <a routerLink="/login"
                    class="block text-white hover:text-gray-300 px-3 py-2 rounded-md">
                     Login
                 </a>
-                <a routerLink="/register" 
+                <a routerLink="/register"
                    class="block text-white hover:text-gray-300 px-3 py-2 rounded-md">
                     Register
                 </a>
             </div>
 
-            <!-- Mobile menu for authenticated users -->
-            <div *ngIf="authenticated" class="px-2 pt-2 pb-3 space-y-1">
-                <button (click)="logout()" 
+            <!-- Mobile menu for admin -->
+            <div *ngIf="authenticated && isAdmin" class="px-2 pt-2 pb-3 space-y-1">
+                <a routerLink="/admin/teachers"
+                   class="block text-white hover:text-gray-300 px-3 py-2 rounded-md">
+                    Teachers
+                </a>
+                <a routerLink="/admin/students"
+                   class="block text-white hover:text-gray-300 px-3 py-2 rounded-md">
+                    Students
+                </a>
+                <button (click)="logout()"
+                        class="block w-full text-left text-white hover:text-gray-300 px-3 py-2 rounded-md">
+                    Logout
+                </button>
+            </div>
+
+            <!-- Mobile menu for non-admin authenticated users -->
+            <div *ngIf="authenticated && !isAdmin" class="px-2 pt-2 pb-3 space-y-1">
+                <button (click)="logout()"
                         class="block w-full text-left text-white hover:text-gray-300 px-3 py-2 rounded-md">
                     Logout
                 </button>

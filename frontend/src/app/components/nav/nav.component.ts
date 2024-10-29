@@ -15,6 +15,8 @@ import { CommonModule } from '@angular/common';
 export class NavComponent implements OnInit {
   authenticated = false;
   isMobileMenuOpen = false;
+  isAdmin = false;
+  user: any = null;
 
   constructor(
     private http: HttpClient,
@@ -22,9 +24,26 @@ export class NavComponent implements OnInit {
   ) { }
 
   ngOnInit(): void {
-    // Subscribe to authentication state changes
     Emitters.authEmitter.subscribe((auth: boolean) => {
       this.authenticated = auth;
+      if (auth) {
+        this.checkUserRole();
+      }
+    });
+  }
+
+  checkUserRole(): void {
+    this.http.get('http://localhost:5000/api/user', {
+      withCredentials: true
+    }).subscribe({
+      next: (res: any) => {
+        this.user = res;
+        this.isAdmin = res.role === 'admin';
+      },
+      error: () => {
+        this.isAdmin = false;
+        this.user = null;
+      }
     });
   }
 
@@ -36,9 +55,9 @@ export class NavComponent implements OnInit {
     this.http.post('http://localhost:5000/api/logout', {}, {
       withCredentials: true
     }).subscribe(() => {
-      // Update authentication state
+      this.isAdmin = false;
+      this.user = null;
       Emitters.authEmitter.emit(false);
-      // Redirect to login page
       this.router.navigate(['/login']);
     });
   }
