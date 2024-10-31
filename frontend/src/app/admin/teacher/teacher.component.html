@@ -45,7 +45,12 @@
                             No courses assigned
                         </div>
                     </td>
-                    <td class="py-3 px-4">
+                    <td class="py-3 px-4 flex space-x-2">
+                        <button 
+                            (click)="openEditModal(teacher)"
+                            class="bg-blue-500 hover:bg-blue-600 text-white py-1 px-3 rounded text-sm transition-colors duration-200">
+                            Edit
+                        </button>
                         <button 
                             (click)="deleteTeacher(teacher._id)"
                             class="bg-red-500 hover:bg-red-600 text-white py-1 px-3 rounded text-sm transition-colors duration-200">
@@ -152,6 +157,88 @@
                         [disabled]="!teacherForm.valid || loading"
                         class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200">
                         {{ loading ? 'Adding...' : 'Add Teacher' }}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Teacher Modal -->
+    <div *ngIf="showEditModal" 
+         class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white p-6 rounded-lg w-full max-w-md m-4">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold">Edit Teacher</h2>
+                <button 
+                    (click)="closeEditModal()"
+                    class="text-gray-500 hover:text-gray-700">
+                    <svg xmlns="http://www.w3.org/2000/svg" 
+                         class="h-6 w-6" 
+                         fill="none" 
+                         viewBox="0 0 24 24" 
+                         stroke="currentColor">
+                        <path stroke-linecap="round" 
+                              stroke-linejoin="round" 
+                              stroke-width="2" 
+                              d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            
+            <form [formGroup]="editTeacherForm" (ngSubmit)="onEditSubmit()">
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="edit-name">
+                        Name
+                    </label>
+                    <input 
+                        id="edit-name"
+                        type="text" 
+                        formControlName="name"
+                        class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                        placeholder="Enter name"
+                    >
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="edit-email">
+                        Email
+                    </label>
+                    <input 
+                        id="edit-email"
+                        type="email" 
+                        formControlName="email"
+                        class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                        placeholder="Enter email"
+                    >
+                </div>
+
+                <div class="mb-6">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="edit-courseId">
+                        Assign Course
+                    </label>
+                    <select 
+                        id="edit-courseId"
+                        formControlName="courseId"
+                        class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                    >
+                        <option value="">Select Course</option>
+                        <option *ngFor="let course of courses" [value]="course._id">
+                            {{ course.name }}
+                        </option>
+                    </select>
+                </div>
+
+                <div class="flex justify-end gap-2">
+                    <button 
+                        type="button"
+                        (click)="closeEditModal()"
+                        class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition-colors duration-200">
+                        Cancel
+                    </button>
+                    <button 
+                        type="submit"
+                        [disabled]="!editTeacherForm.valid || loading"
+                        class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200">
+                        {{ loading ? 'Updating...' : 'Update Teacher' }}
                     </button>
                 </div>
             </form>

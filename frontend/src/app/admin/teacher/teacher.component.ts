@@ -16,11 +16,14 @@ export class TeacherComponent implements OnInit {
     teachers: any[] = [];
     courses: any[] = [];
     showAddModal = false;
+    showEditModal = false;
     showDeleteModal = false;
     teacherForm: FormGroup;
+    editTeacherForm: FormGroup;
     loading = false;
     error = '';
     teacherToDelete: string | null = null;
+    editingTeacher: any = null;
 
     constructor(
         private http: HttpClient,
@@ -30,6 +33,12 @@ export class TeacherComponent implements OnInit {
             name: ['', Validators.required],
             email: ['', [Validators.required, Validators.email]],
             password: ['', [Validators.required, Validators.minLength(6)]],
+            courseId: ['', Validators.required]
+        });
+
+        this.editTeacherForm = this.fb.group({
+            name: ['', Validators.required],
+            email: ['', [Validators.required, Validators.email]],
             courseId: ['', Validators.required]
         });
     }
@@ -79,6 +88,24 @@ export class TeacherComponent implements OnInit {
         this.error = '';
     }
 
+    openEditModal(teacher: any) {
+        this.editingTeacher = teacher;
+        this.showEditModal = true;
+        this.editTeacherForm.patchValue({
+            name: teacher.name,
+            email: teacher.email,
+            courseId: teacher.courses?.[0]?._id || ''
+        });
+        this.error = '';
+    }
+
+    closeEditModal() {
+        this.showEditModal = false;
+        this.editingTeacher = null;
+        this.editTeacherForm.reset();
+        this.error = '';
+    }
+
     onSubmit() {
         if (this.teacherForm.valid) {
             this.loading = true;
@@ -93,6 +120,27 @@ export class TeacherComponent implements OnInit {
                 error: (err) => {
                     this.loading = false;
                     this.error = err.error.message || 'Failed to add teacher';
+                }
+            });
+        }
+    }
+
+    onEditSubmit() {
+        if (this.editTeacherForm.valid && this.editingTeacher) {
+            this.loading = true;
+            this.http.put(
+                `http://localhost:5000/api/admin/teachers/${this.editingTeacher._id}`,
+                this.editTeacherForm.value,
+                { withCredentials: true }
+            ).subscribe({
+                next: (res: any) => {
+                    this.loading = false;
+                    this.closeEditModal();
+                    this.loadTeachers();
+                },
+                error: (err) => {
+                    this.loading = false;
+                    this.error = err.error.message || 'Failed to update teacher';
                 }
             });
         }

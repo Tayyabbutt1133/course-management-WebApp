@@ -198,28 +198,9 @@ router.post('/students', async (req, res) => {
             return res.status(401).json({ message: "Unauthorized" });
         }
 
-        const { name, email, password, courseId } = req.body;
+        const { name, email, password, courseId, teacherId } = req.body;
 
-        // Validate email format
-        if (!email.match(/.+@.+\..+/)) {
-            return res.status(400).json({ message: "Invalid email format" });
-        }
-
-        const existingUser = await User.findOne({ email });
-        if (existingUser) {
-            return res.status(400).json({ message: "Email already registered" });
-        }
-
-        // Verify course exists
-        if (courseId) {
-            const course = await Course.findById(courseId);
-            if (!course) {
-                return res.status(404).json({ message: "Course not found" });
-            }
-        }
-
-        const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(password, salt);
+        // ... (existing validation code)
 
         const student = new User({
             name,
@@ -230,10 +211,17 @@ router.post('/students', async (req, res) => {
 
         await student.save();
 
-        // Assign to course if courseId provided
         if (courseId) {
             const course = await Course.findById(courseId);
             course.students.push(student._id);
+            
+            if (teacherId) {
+                course.teacherStudentPairs.push({
+                    teacher: teacherId,
+                    student: student._id
+                });
+            }
+            
             await course.save();
         }
 
@@ -252,6 +240,7 @@ router.post('/students', async (req, res) => {
 });
 
 // Get all students with their courses
+// / Update this route in adminRoutes.js
 router.get('/students', async (req, res) => {
     try {
         const admin = await verifyAdmin(req);
@@ -262,17 +251,32 @@ router.get('/students', async (req, res) => {
         const students = await User.find({ role: 'student' })
             .select('-password');
         
-        // Get courses for each student
-        const studentsWithCourses = await Promise.all(students.map(async (student) => {
+        const studentsWithDetails = await Promise.all(students.map(async (student) => {
             const courses = await Course.find({ students: student._id })
-                .select('name description');
+                .populate('teachers', 'name email')
+                .select('name description teachers teacherStudentPairs');
+
+            const teacherPairs = courses.reduce((acc, course) => {
+                const studentPair = course.teacherStudentPairs.find(
+                    pair => pair.student.toString() === student._id.toString()
+                );
+                if (studentPair && studentPair.teacher) {
+                    const teacher = course.teachers.find(
+                        t => t._id.toString() === studentPair.teacher.toString()
+                    );
+                    if (teacher) acc.push(teacher);
+                }
+                return acc;
+            }, []);
+
             return {
                 ...student.toJSON(),
-                courses
+                courses,
+                teachers: teacherPairs
             };
         }));
 
-        res.json(studentsWithCourses);
+        res.json(studentsWithDetails);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -346,5 +350,202 @@ router.get('/courses/:id', async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 });
+// Add this to adminRoutes.js - Edit teacher route
+router.put('/teachers/:id', async (req, res) => {
+    try {
+        const admin = await verifyAdmin(req);
+        if (!admin) {
+            return res.status(401).json({ message: "Unauthorized" });
+        }
+
+        const { name, email, courseId } = req.body;
+        const teacherId = req.params.id;
+
+        // Find teacher
+        const teacher = await User.findOne({ _id: teacherId, role: 'teacher' });
+        if (!teacher) {
+            return res.status(404).json({ message: "Teacher not found" });
+        }
+
+        // Check if email is being changed and if it's already in use
+        if (email !== teacher.email) {
+            const existingUser = await User.findOne({ email });
+            if (existingUser) {
+                return res.status(400).json({ message: "Email already registered" });
+            }
+        }
+
+        // Update teacher
+        teacher.name = name;
+        teacher.email = email;
+        await teacher.save();
+
+        // Handle course assignment
+        if (courseId) {
+            // Remove teacher from all current courses
+            await Course.updateMany(
+                { teachers: teacherId },
+                { $pull: { teachers: teacherId } }
+            );
+
+            // Add to new course
+            const course = await Course.findById(courseId);
+            if (!course) {
+                return res.status(404).json({ message: "Course not found" });
+            }
+            course.teachers.push(teacherId);
+            await course.save();
+        }
+
+        // Get updated teacher with courses
+        const updatedTeacher = await User.findById(teacherId).select('-password');
+        const courses = await Course.find({ teachers: teacherId })
+            .select('name description');
+
+        res.json({
+            message: "Teacher updated successfully",
+            teacher: {
+                ...updatedTeacher.toJSON(),
+                courses
+            }
+        });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+// Delete student route (Add this to adminRoutes.js)
+router.delete('/students/:id', async (req, res) => {
+    try {
+        const admin = await verifyAdmin(req);
+        if (!admin) {
+            return res.status(401).json({ message: "Unauthorized" });
+        }
+
+        const student = await User.findOne({ _id: req.params.id, role: 'student' });
+        if (!student) {
+            return res.status(404).json({ message: "Student not found" });
+        }
+
+        // Remove student from any courses they're enrolled in
+        await Course.updateMany(
+            { students: req.params.id },
+            { $pull: { students: req.params.id } }
+        );
+
+        // Delete the student
+        await User.deleteOne({ _id: req.params.id });
+
+        res.json({ message: "Student deleted successfully" });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+// Edit student route
+router.put('/students/:id', async (req, res) => {
+    try {
+        const admin = await verifyAdmin(req);
+        if (!admin) {
+            return res.status(401).json({ message: "Unauthorized" });
+        }
+
+        const { name, email, courseId } = req.body;
+        const studentId = req.params.id;
+
+        // Find student
+        const student = await User.findOne({ _id: studentId, role: 'student' });
+        if (!student) {
+            return res.status(404).json({ message: "Student not found" });
+        }
+
+        // Check if email is being changed and if it's already in use
+        if (email !== student.email) {
+            const existingUser = await User.findOne({ email });
+            if (existingUser) {
+                return res.status(400).json({ message: "Email already registered" });
+            }
+        }
+
+        // Update student
+        student.name = name;
+        student.email = email;
+        await student.save();
+
+        // Handle course assignment
+        if (courseId) {
+            // Remove student from all current courses
+            await Course.updateMany(
+                { students: studentId },
+                { $pull: { students: studentId } }
+            );
+
+            // Add to new course
+            const course = await Course.findById(courseId);
+            if (!course) {
+                return res.status(404).json({ message: "Course not found" });
+            }
+            course.students.push(studentId);
+            await course.save();
+        }
+
+        // Get updated student with courses
+        const updatedStudent = await User.findById(studentId).select('-password');
+        const courses = await Course.find({ students: studentId })
+            .select('name description');
+
+        res.json({
+            message: "Student updated successfully",
+            student: {
+                ...updatedStudent.toJSON(),
+                courses
+            }
+        });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+router.post('/assign-teacher', async (req, res) => {
+    try {
+        const admin = await verifyAdmin(req);
+        if (!admin) {
+            return res.status(401).json({ message: "Unauthorized" });
+        }
+
+        const { studentId, teacherId, courseId } = req.body;
+
+        // Verify course exists
+        const course = await Course.findById(courseId);
+        if (!course) {
+            return res.status(404).json({ message: "Course not found" });
+        }
+
+        // Verify teacher exists and is assigned to the course
+        if (!course.teachers.includes(teacherId)) {
+            return res.status(400).json({ message: "Teacher is not assigned to this course" });
+        }
+
+        // Update the teacherStudentPairs
+        const existingPairIndex = course.teacherStudentPairs.findIndex(
+            pair => pair.student.toString() === studentId
+        );
+
+        if (existingPairIndex !== -1) {
+            course.teacherStudentPairs[existingPairIndex].teacher = teacherId;
+        } else {
+            course.teacherStudentPairs.push({
+                teacher: teacherId,
+                student: studentId
+            });
+        }
+
+        await course.save();
+
+        res.json({ message: "Teacher assigned successfully" });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
 
 export default router;

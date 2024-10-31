@@ -1,5 +1,15 @@
-// models/course.js
 import mongoose from "mongoose";
+
+const teacherStudentPairSchema = new mongoose.Schema({
+    teacher: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+    },
+    student: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+    }
+});
 
 const courseSchema = new mongoose.Schema({
     name: {
@@ -22,7 +32,8 @@ const courseSchema = new mongoose.Schema({
     students: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User'
-    }]
+    }],
+    teacherStudentPairs: [teacherStudentPairSchema]
 }, {
     timestamps: true
 });
