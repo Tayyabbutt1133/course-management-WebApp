@@ -16,7 +16,27 @@ const initialCourses = [
         name: "Database Management",
         description: "Introduction to databases with MongoDB",
         duration: 10
-    }
+    },
+    {
+        name: "Human Computer Interaction",
+        description: "Interaction of humans with computer",
+        duration: 4
+    },
+    {
+        name: "Assembly language",
+        description: "Compiler code to interact with computers",
+        duration: 6
+    },
+    {
+        name: "Mobile development",
+        description: "Understanding fundamentals of mobile interface and development",
+        duration: 6
+    },
+    {
+        name: "Theory of automata",
+        description: "Compiler code to interact with computers",
+        duration: 6
+    },
 ];
 
 const initializeCourses = async () => {
