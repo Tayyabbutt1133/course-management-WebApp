@@ -191,6 +191,7 @@ router.delete('/teachers/:id', async (req, res) => {
 // Student Routes
 
 // Add student with course
+// Add student with course
 router.post('/students', async (req, res) => {
     try {
         const admin = await verifyAdmin(req);
@@ -200,12 +201,24 @@ router.post('/students', async (req, res) => {
 
         const { name, email, password, courseId, teacherId } = req.body;
 
-        // ... (existing validation code)
+        // Add validation for email and existing user check
+        if (!email.match(/.+@.+\..+/)) {
+            return res.status(400).json({ message: "Invalid email format" });
+        }
+
+        const existingUser = await User.findOne({ email });
+        if (existingUser) {
+            return res.status(400).json({ message: "Email already registered" });
+        }
+
+        // Add password hashing here
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
 
         const student = new User({
             name,
             email,
-            password: hashedPassword,
+            password: hashedPassword,  // Now using the hashed password
             role: 'student'
         });
 
@@ -213,6 +226,10 @@ router.post('/students', async (req, res) => {
 
         if (courseId) {
             const course = await Course.findById(courseId);
+            if (!course) {
+                return res.status(404).json({ message: "Course not found" });
+            }
+            
             course.students.push(student._id);
             
             if (teacherId) {

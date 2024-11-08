@@ -21,9 +21,8 @@ app.use(express.json());
 // Routes
 app.use("/api", routes);
 app.use("/api/admin", adminRoutes);
-app.use("api/student", studentRoutes);
-app.use("api/teacher", teacherRoutes);
-
+app.use("/api/student", studentRoutes);
+app.use("/api/teacher", teacherRoutes);
 mongoose.connect("mongodb://localhost:27017/edtech", {})
     .then(() => {
         console.log("connected to database");

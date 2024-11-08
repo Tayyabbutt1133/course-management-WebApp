@@ -1,1 +1,57 @@
-<p>userteacher works!</p>
+<!-- userteacher.component.html -->
+<div class="container mx-auto p-4">
+    <div class="mb-6">
+        <h2 class="text-3xl font-bold text-gray-800">My Teaching Courses</h2>
+        <p class="text-gray-600">Manage your assigned courses and students</p>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="loading" class="text-center py-8">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+        <p class="mt-4 text-gray-600">Loading courses...</p>
+    </div>
+
+    <!-- Error State -->
+    <div *ngIf="error" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+        {{error}}
+    </div>
+
+    <!-- Courses Grid -->
+    <div *ngIf="!loading && !error" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div *ngFor="let course of courses" 
+             class="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300">
+            <div class="p-6">
+                <h3 class="text-xl font-semibold text-gray-800 mb-2">{{course.name}}</h3>
+                <p class="text-gray-600 mb-4">{{course.description}}</p>
+                
+                <div class="flex items-center mb-4">
+                    <span class="bg-blue-100 text-blue-800 text-sm font-medium px-3 py-1 rounded">
+                        {{course.duration}} weeks
+                    </span>
+                </div>
+
+                <div class="mt-4">
+                    <h4 class="font-medium text-gray-700 mb-2">Assigned Students:</h4>
+                    <div class="space-y-2">
+                        <div *ngFor="let student of course.students" 
+                             class="flex items-center justify-between bg-gray-50 p-2 rounded">
+                            <div>
+                                <p class="font-medium">{{student.name}}</p>
+                                <p class="text-sm text-gray-600">{{student.email}}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div *ngIf="course.students.length === 0" class="text-gray-500 text-sm italic">
+                        No students assigned yet
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- No Courses State -->
+    <div *ngIf="!loading && !error && courses.length === 0" 
+         class="text-center py-8 bg-gray-50 rounded-lg">
+        <p class="text-gray-600">No courses assigned yet.</p>
+    </div>
+</div>
