@@ -6,6 +6,8 @@ import routes from './routes/routes.js';
 import adminRoutes from './routes/adminRoutes.js';  // Make sure this matches your file name
 import initializeAdmin from './config/adminInit.js';
 import initializeCourses from './config/courseInit.js';
+import studentRoutes from './routes/studentRoutes.js'
+import teacherRoutes from './routes/teacherRoutes.js'
 
 const app = express();
 
@@ -19,6 +21,8 @@ app.use(express.json());
 // Routes
 app.use("/api", routes);
 app.use("/api/admin", adminRoutes);
+app.use("api/student", studentRoutes);
+app.use("api/teacher", teacherRoutes);
 
 mongoose.connect("mongodb://localhost:27017/edtech", {})
     .then(() => {
